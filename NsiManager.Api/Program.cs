@@ -1,23 +1,55 @@
+using Dapper;
+using Microsoft.AspNetCore.Mvc;
+using NsiManager.Api.Data;
+using NsiManager.Api.Dtos;
+using NsiManager.Api.Middleware;
+using NsiManager.Api.Repositories;
+using NsiManager.Api.Repositories.Interfaces;
+
+DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // ვალიდაციის შეცდომებიც იმავე ფორმატით: { "message": "..." }
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var messages = context.ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .Where(m => !string.IsNullOrWhiteSpace(m))
+                .Distinct();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            return new BadRequestObjectResult(new ApiError(string.Join("; ", messages)));
+        };
+    });
+
 builder.Services.AddOpenApi();
+
+// ბაზა
+builder.Services.AddSingleton<Connections>();
+builder.Services.AddSingleton<DapperActions>();
+
+// ცნობარები — ყოველი ახალი ცნობარის repository აქ რეგისტრირდება
+builder.Services.AddScoped<ISp122Repository, Sp122Repository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

@@ -1,6 +1,61 @@
-@NsiManager.Api_HostAddress = http://localhost:5259
+# API-ის ტესტირება Rider-იდან: თითოეული მოთხოვნის გვერდით ▶ ღილაკი.
+# ჯერ გაუშვით API: dotnet run --project NsiManager.Api --launch-profile http
 
-GET {{NsiManager.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@host = http://localhost:5259
 
-###
+### 1. სია (პირველი გვერდი)
+GET {{host}}/api/sp122?page=1&pageSize=20
+
+### 2. ძებნა ვაგონის ნომრით — უნდა იპოვოს 30100090 – 30119999
+GET {{host}}/api/sp122?search=30110000
+
+### 3. ძებნა ტექსტით
+GET {{host}}/api/sp122?search=სატესტო
+
+### 4. ერთი ჩანაწერი
+GET {{host}}/api/sp122/1
+
+### 5. დამატება
+POST {{host}}/api/sp122
+Content-Type: application/json
+
+{
+  "ng": 50000000,
+  "vg": 50000999,
+  "kol": "4",
+  "ves": 230,
+  "udl": "90",
+  "dm": "13000",
+  "prg": "70",
+  "utv": "500",
+  "nazGr": "API-დან დამატებული"
+}
+
+### 6. შეცდომა 409 — დიაპაზონი კვეთს არსებულს
+POST {{host}}/api/sp122
+Content-Type: application/json
+
+{ "ng": 30110000, "vg": 30110500 }
+
+### 7. შეცდომა 400 — 8-ნიშნა არ არის
+POST {{host}}/api/sp122
+Content-Type: application/json
+
+{ "ng": 1234, "vg": 5678 }
+
+### 8. რედაქტირება (prkey შეცვალეთ 5-ე მოთხოვნის პასუხიდან)
+PUT {{host}}/api/sp122/5
+Content-Type: application/json
+
+{
+  "ng": 50000000,
+  "vg": 50001999,
+  "kol": "4",
+  "nazGr": "რედაქტირებული"
+}
+
+### 9. წაშლა (prkey შეცვალეთ)
+DELETE {{host}}/api/sp122/5
+
+### 10. შეცდომა 404 — არარსებული ჩანაწერი
+DELETE {{host}}/api/sp122/999999
