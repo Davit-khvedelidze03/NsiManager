@@ -1,0 +1,133 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 64px;
+  padding: 0 32px;
+  background: var(--header-bg);
+  border-bottom: 3px solid var(--header-accent);
+  color: #fff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--header-bg);
+}
+
+/* ---------- ცნობარების ჩამონათვალი ---------- */
+
+.dict-select { position: relative; }
+
+.dict-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dict-button:hover,
+.dict-button[aria-expanded='true'] { background: rgba(255, 255, 255, 0.16); }
+
+.chevron { transition: transform 0.15s; }
+.chevron.open { transform: rotate(180deg); }
+
+.dict-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 360px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(15, 30, 58, 0.18);
+}
+
+.dict-menu a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.dict-menu a:hover { background: var(--primary-soft); }
+.dict-menu a.active { background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
+
+.dict-code {
+  color: var(--primary);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.dict-title {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ---------- რეჟიმი ---------- */
+
+.role-switch {
+  display: flex;
+  margin-left: auto;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.role-switch button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.role-switch button:hover { color: #fff; }
+
+.role-switch button.active {
+  background: #fff;
+  color: var(--header-bg);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .header { gap: 10px; padding: 0 12px; }
+  .brand { font-size: 0; gap: 0; }
+  .dict-menu { min-width: min(320px, calc(100vw - 24px)); }
+  .role-switch button { padding: 6px 10px; }
+}

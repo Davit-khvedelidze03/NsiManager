@@ -1,1 +1,305 @@
-/* You can add global styles to this file, and also import other style files */
+/* =====================================================================
+   NSI ცნობარები — საერთო ვიზუალი (ოფიციალური სტილი: თეთრი და ლურჯი)
+   ყველა ცნობარის გვერდი ამ კლასებს იყენებს, ამიტომ ერთნაირად გამოიყურება.
+   ===================================================================== */
+
+:root {
+  --header-bg: #0f3473;
+  --header-accent: #2f6fd1;
+
+  --bg: #f3f6fa;
+  --surface: #ffffff;
+  --surface-alt: #f7f9fc;
+  --border: #d9e1ec;
+  --border-strong: #c3cfdf;
+  --text: #0f1e3a;
+  --text-muted: #51607a;
+
+  --primary: #1a4fa0;
+  --primary-hover: #143f82;
+  --primary-soft: #e8eff9;
+  --primary-border: #b6c8e6;
+
+  --danger: #c0392b;
+  --danger-soft: #fdf1ef;
+  --danger-border: #ecc3bd;
+
+  --focus: #2f6fd1;
+
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  --font: 'Noto Sans Georgian', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--primary); }
+
+/* ---------- გვერდის სათაური ---------- */
+
+.page {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 32px 40px 56px;
+}
+
+.page-title {
+  margin: 0 0 6px;
+  color: var(--header-bg);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ---------- ბარათი და ფორმა ---------- */
+
+.card {
+  margin-top: 24px;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 30, 58, 0.05);
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+
+.card-title {
+  margin: 0;
+  color: var(--header-bg);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.card-meta {
+  padding: 2px 8px;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.card-body { padding: 24px; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-field.wide { grid-column: span 2; }
+
+.form-field label {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.form-field .required { color: var(--danger); }
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input.mono { font-family: var(--mono); }
+.input:hover { border-color: var(--primary-border); }
+
+.input:focus {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(47, 111, 209, 0.15);
+}
+
+.input.invalid { border-color: var(--danger); }
+
+.field-error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+/* ---------- ღილაკები ---------- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  height: 40px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible { outline: 3px solid rgba(47, 111, 209, 0.35); outline-offset: 2px; }
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+.btn-secondary { background: var(--surface); border-color: var(--primary-border); color: var(--primary); }
+.btn-secondary:hover:not(:disabled) { background: var(--primary-soft); }
+
+.btn-danger { background: var(--surface); border-color: var(--danger-border); color: var(--danger); }
+.btn-danger:hover:not(:disabled) { background: var(--danger-soft); }
+
+.btn-danger-solid { background: var(--danger); color: #fff; }
+.btn-danger-solid:hover:not(:disabled) { background: #a33024; }
+
+.btn-sm { height: 32px; padding: 0 12px; font-size: 16px; }
+
+/* ---------- ძებნა და ცხრილი ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.toolbar .search { width: min(100%, 420px); }
+.toolbar .count { color: var(--text-muted); }
+.toolbar .count b { color: var(--text); }
+.toolbar .spacer { flex: 1; }
+
+.table-wrap {
+  margin-top: 14px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th {
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--primary-border);
+  background: var(--primary-soft);
+  color: var(--header-bg);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.data-table td.text-cell {
+  min-width: 240px;
+  font-family: var(--font);
+  white-space: normal;
+}
+
+.data-table tbody tr:nth-child(even) td { background: var(--surface-alt); }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table.selectable tbody tr:not(.empty-row) { cursor: pointer; }
+.data-table.selectable tbody tr:not(.empty-row):hover td { background: #eef3fb; }
+.data-table tbody tr.selected td { background: var(--primary-soft); }
+.data-table tbody tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
+.data-table tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+.data-table .empty-row td {
+  padding: 40px 16px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font);
+  text-align: center;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pager-info {
+  min-width: 64px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  text-align: center;
+}
+
+/* ---------- პატარა ეკრანები ---------- */
+
+@media (max-width: 1100px) {
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 24px 16px 40px; }
+  .page-title { font-size: 20px; }
+  .card-header, .card-body { padding-left: 16px; padding-right: 16px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.wide { grid-column: auto; }
+  .toolbar .spacer { display: none; }
+}

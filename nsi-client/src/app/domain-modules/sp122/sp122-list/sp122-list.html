@@ -1,0 +1,112 @@
+<section class="page">
+  <h1 class="page-title">8-ნიშნა ნუმერაციის სისტემა სატვირთო ვაგონებისთვის</h1>
+  <p class="page-subtitle">DBSQL.NSI.dbo.SP-122</p>
+
+  <!-- ფორმა: დამატება / რედაქტირება — მხოლოდ ადმინის რეჟიმში -->
+  @if (roles.isAdmin()) {
+    <form class="card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="card-header">
+        <h2 class="card-title">{{ store.selected() ? 'ჩანაწერის რედაქტირება' : 'ახალი ჩანაწერი' }}</h2>
+        @if (store.selected(); as selected) {
+          <span class="card-meta">{{ selected.ng }} – {{ selected.vg }}</span>
+        }
+      </div>
+
+      <div class="card-body">
+        <div class="form-grid">
+          @for (field of fields; track field.key) {
+            <div class="form-field" [class.wide]="field.wide">
+              <label [for]="'sp122-' + field.key">
+                {{ field.label }}
+                @if (field.required) {
+                  <span class="required" aria-hidden="true">*</span>
+                }
+              </label>
+              <input
+                class="input"
+                [class.mono]="field.kind !== 'text'"
+                [class.invalid]="showError(field.key)"
+                [id]="'sp122-' + field.key"
+                [formControlName]="field.key"
+                [attr.inputmode]="inputMode(field)"
+                [attr.maxlength]="field.maxLength ?? null"
+                autocomplete="off"
+              />
+              @if (showError(field.key)) {
+                <span class="field-error">{{ errorText(field) }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ store.selected() ? 'შენახვა' : 'დამატება' }}
+          </button>
+          <button type="button" class="btn btn-danger" [disabled]="!store.selected() || saving()" (click)="remove()">
+            წაშლა
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="clear()">გასუფთავება</button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <!-- ძებნა, რაოდენობა, ექსპორტი -->
+  <div class="toolbar">
+    <input
+      class="input search"
+      type="search"
+      placeholder="ძებნა ნებისმიერი პარამეტრით..."
+      aria-label="ძებნა"
+      [formControl]="searchControl"
+    />
+    <span class="count">ჩანაწერები: <b>{{ store.totalCount() }}</b></span>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-secondary" disabled title="მომავალ ვერსიაში">Excel-ში ექსპორტი</button>
+  </div>
+
+  <!-- ცხრილი -->
+  <div class="table-wrap">
+    <table class="data-table" [class.selectable]="roles.isAdmin()">
+      <thead>
+        <tr>
+          @for (field of fields; track field.key) {
+            <th scope="col">{{ field.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of store.rows(); track row.prkey) {
+          <tr
+            [class.selected]="isSelected(row)"
+            [attr.aria-selected]="roles.isAdmin() ? isSelected(row) : null"
+            [attr.tabindex]="roles.isAdmin() ? 0 : null"
+            (click)="select(row)"
+            (keydown.enter)="select(row)"
+          >
+            @for (field of fields; track field.key) {
+              <td [class.text-cell]="field.wide">{{ row[field.key] }}</td>
+            }
+          </tr>
+        } @empty {
+          <tr class="empty-row">
+            <td [attr.colspan]="fields.length">
+              {{ store.loading() ? 'იტვირთება...' : 'ჩანაწერები ვერ მოიძებნა' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (store.totalPages() > 1) {
+    <nav class="pager" aria-label="გვერდები">
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="store.page() === 1"
+              (click)="store.goToPage(store.page() - 1)" aria-label="წინა გვერდი">‹</button>
+      <span class="pager-info">{{ store.page() }} / {{ store.totalPages() }}</span>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="store.page() === store.totalPages()"
+              (click)="store.goToPage(store.page() + 1)" aria-label="შემდეგი გვერდი">›</button>
+    </nav>
+  }
+</section>

@@ -1,7 +1,7 @@
 # NsiManager — პროგრესი და გეგმა
 
 > ეს ფაილი პროექტის მიმდინარე მდგომარეობას აღწერს. ახალ სესიაში მუშაობის გაგრძელებამდე ჯერ ის წაიკითხეთ.
-> ბოლო განახლება: 2026-10-14
+> ბოლო განახლება: 2026-10-15
 
 ## პროექტი
 
@@ -24,7 +24,10 @@ NSI ცნობარების მართვის ვებ-აპლი�
   - როლები API-შიც მოწმდება (`[Authorize(Roles = "Admin")]`)
   - ძებნა და გვერდებად დაყოფა ბაზაში ხდება
   - საერთო ვიზუალი `styles.css`-შია
-- **როლები**: `Admin` ცვლის მონაცემებს, `User` მხოლოდ ნახულობს. გამოიყენება `auth.Users` ცხრილი და JWT.
+- **როლები**: `Admin` ცვლის მონაცემებს, `User` მხოლოდ ნახულობს.
+  **ჯერჯერობით ავტორიზაციის გარეშე**: header-ის მარჯვენა კუთხეში დემო გადამრთველია „ადმინი / მომხმარებელი“
+  (`core/services/role.service.ts`, არჩევანი localStorage-ში ინახება). ის მხოლოდ ინტერფეისს ცვლის,
+  API ღიაა. ნამდვილი login (`auth.Users` + JWT + `[Authorize]`) მოგვიანებით დაემატება. ბაზის ცხრილი უკვე მზადაა.
 - **შეცდომები**: SQL `THROW` 50001 → 400, 50002 → 409, 50004 → 404, ქართული შეტყობინებით.
   API ყოველთვის აბრუნებს `{ "message": "..." }`.
 - **SP-122-ის წესები** (ჩემი ვარაუდით დამატებული, საჭიროებს დადასტურებას): ნომერი 8-ნიშნაა,
@@ -43,24 +46,34 @@ NSI ცნობარების მართვის ვებ-აპლი�
 | # | ეტაპი | სტატუსი |
 |---|---|---|
 | 0 | მომზადება: პროექტები, git, GitHub | ✅ |
-| 1 | ბაზა: `database/` (auth + sp122 სკრიპტები) | ✅ დაწერილია და DataGrip-ში გაშვებულია |
-| 2 | Backend: SP-122 API | ⏳ კოდი დაწერილია, build-ი და ტესტები დარჩა |
-| 3 | როლები: login, JWT, Admin/User | — |
-| 4 | Frontend-ის ჩარჩო: header, ალერტები, loading, login | — |
-| 5 | SP-122-ის გვერდი: ფორმა, ცხრილი, ძებნა, გვერდები | — |
+| 1 | ბაზა: `database/` (auth + sp122 სკრიპტები) | ✅ |
+| 2 | Backend: SP-122 API | ✅ build გადის |
+| 3 | როლები: login, JWT | ⏸ გადადებულია. ახლა მოქმედებს დემო გადამრთველი |
+| 4 | Frontend-ის ჩარჩო: header, ჩანართები, რეჟიმის გადამრთველი, ალერტები, loading, დადასტურება | ⏳ კოდი დაწერილია, გაშვება/შემოწმება დარჩა |
+| 5 | SP-122-ის გვერდი: ფორმა, ცხრილი, ძებნა, გვერდები | ⏳ კოდი დაწერილია, გაშვება/შემოწმება დარჩა |
 | 6 | PORT იგივე ნიმუშით | — |
-| 7 | დახვეწა: Excel, ისტორია, ტესტები, deploy | — |
+| 7 | დახვეწა: login, Excel, ისტორია, ტესტები, deploy | — |
 
-## შემდეგი ნაბიჯები (ეტაპი 2-ის დასრულება)
+## შემდეგი ნაბიჯები (ეტაპი 4–5-ის შემოწმება)
 
-1. `git add database && git commit -m "Add database scripts: auth and SP-122"`
-2. `rm -r NsiManager.Api/Services` და
-   `git rm -q NsiManager.Api/WeatherForecast.cs NsiManager.Api/Controllers/WeatherForecastController.cs`
-3. `dotnet user-secrets list`: პორტი DataGrip-ის კავშირს უნდა ემთხვეოდეს (ფოტოზე 1432 ეწერა, შესამოწმებელია)
-4. `dotnet build`
-5. `dotnet run --launch-profile http` → http://localhost:5259
-6. `NsiManager.Api.http`-ის 10 მოთხოვნის ტესტირება Rider-ში
-7. `git add -A && git commit -m "Add SP-122 API" && git push`
+1. Terminal 1: `cd NsiManager.Api && dotnet run --launch-profile http` (API → http://localhost:5259)
+2. Terminal 2: `cd nsi-client && ng serve` → http://localhost:4200
+   (`/api` მოთხოვნებს `proxy.conf.json` API-ზე გადაამისამართებს, ამიტომ CORS საჭირო არ არის)
+3. შემოწმება: სია, ძებნა, დამატება, მონიშვნა → შენახვა, წაშლა, შეცდომის ალერტები, რეჟიმის გადამრთველი
+4. `git add -A && git commit -m "Add frontend: layout, role switch, SP-122 page" && git push`
+
+## Frontend-ის სტრუქტურა (`nsi-client/src/app`)
+
+```
+core/        api.ts, layout/ (layout, header, navigation.ts), services/role.service.ts,
+             interceptors/ (loading, error), not-found/
+shared/      alert/, loading/, confirm-dialog/, models/ (paged-result, api-error)
+domain-modules/sp122/
+             models/sp122.ts, models/sp122-fields.ts (ველები, ქართული სათაურები, ვალიდაცია)
+             services/sp122-api.service.ts (HTTP), services/sp122-form.service.ts (state)
+             sp122-list/ (გვერდი), sp122.routes.ts
+styles.css   საერთო ვიზუალი: .page, .card, .form-grid, .btn, .data-table ...
+```
 
 ## ახალი ცნობარის დამატების ჩამონათვალი
 
@@ -70,8 +83,9 @@ NSI ცნობარების მართვის ვებ-აპლი�
 **Backend**: `Models/<X>.cs`, `Dtos/<X>Request.cs`, `Repositories/Interfaces/I<X>Repository.cs`,
 `Repositories/<X>Repository.cs`, `Controllers/<X>Controller.cs`, რეგისტრაცია `Program.cs`-ში
 
-**Frontend** (`domain-modules/<x>/`): model, `<x>-api.service.ts`, `<x>-form.service.ts`,
-`<x>-list` კომპონენტი, routes, ჩანართი header-ში
+**Frontend** (`domain-modules/<x>/`): `models/<x>.ts`, `models/<x>-fields.ts`, `services/<x>-api.service.ts`,
+`services/<x>-form.service.ts`, `<x>-list/` კომპონენტი, `<x>.routes.ts`, ხაზი `app.routes.ts`-ში
+და ჩანართი `core/layout/navigation.ts`-ში
 
 ## სატესტო მომხმარებლები (მხოლოდ ლოკალურად)
 
