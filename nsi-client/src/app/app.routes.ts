@@ -2,10 +2,9 @@ import { Routes } from '@angular/router';
 import { Layout } from './core/layout/layout';
 import { NotFound } from './core/not-found/not-found';
 
-/**
- * ყოველი ცნობარი ცალკე იტვირთება (lazy loading), როგორც DictionariesManager-ში.
- * ახალი ცნობარი = ახალი ხაზი children-ში + ჩანართი core/layout/navigation.ts-ში.
- */
+
+ //ყოველი ცნობარი ცალკე იტვირთება lazy loading-ის მეშვეობით.
+
 export const routes: Routes = [
   {
     path: '',
