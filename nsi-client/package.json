@@ -2,11 +2,11 @@
   "name": "nsi-client",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "ng": "node scripts/angular-cli.mjs",
+    "start": "node scripts/angular-cli.mjs serve --poll 1000",
+    "build": "node scripts/angular-cli.mjs build",
+    "watch": "node scripts/angular-cli.mjs build --watch --poll 1000 --configuration development",
+    "test": "node scripts/angular-cli.mjs test"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

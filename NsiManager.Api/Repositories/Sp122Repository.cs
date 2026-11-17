@@ -41,6 +41,9 @@ public class Sp122Repository(Connections connections, DapperActions dapper) : IS
         return row ?? throw new InvalidOperationException("SP122_Update-მა ჩანაწერი არ დააბრუნა");
     }
 
+    public async Task<bool> HasOverlapAsync(int ng, int vg, int? prkey) =>
+        await dapper.QueryFirstOrDefaultAsync<bool>(connections.Nsi, "dbo.SP122_CheckOverlap", new { ng, vg, prkey });
+
     public Task DeleteAsync(int prkey) =>
         dapper.ExecuteAsync(connections.Nsi, "dbo.SP122_Delete", new { prkey });
 

@@ -9,5 +9,6 @@ public interface ISp122Repository
     Task<Sp122?> GetByIdAsync(int prkey);
     Task<Sp122> InsertAsync(Sp122Request request);
     Task<Sp122> UpdateAsync(int prkey, Sp122Request request);
+    Task<bool> HasOverlapAsync(int ng, int vg, int? prkey);
     Task DeleteAsync(int prkey);
 }

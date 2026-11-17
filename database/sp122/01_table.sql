@@ -25,8 +25,13 @@ BEGIN
         naz_rus  NVARCHAR(500)  NULL,       -- დამატებითი მახასიათებელი (რუსულად)
 
         CONSTRAINT PK_SP122       PRIMARY KEY (prkey),
-        CONSTRAINT UQ_SP122_Range UNIQUE (ng, vg),
-        CONSTRAINT CK_SP122_Range CHECK (ng <= vg)
+        CONSTRAINT CK_SP122_Range CHECK (ng < vg)
     );
 END
+GO
+
+-- Existing databases: do not retroactively reject imported rows.
+-- New writes are validated by Insert/Update; all overlap remains warning-only.
+IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(N'dbo.[SP-122]') AND name = N'UQ_SP122_Range')
+    ALTER TABLE dbo.[SP-122] DROP CONSTRAINT UQ_SP122_Range;
 GO

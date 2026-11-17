@@ -20,6 +20,10 @@ public class Sp122Controller(ISp122Repository repository) : ControllerBase
         return Ok(await repository.GetListAsync(search, page, pageSize));
     }
 
+    [HttpGet("overlap")]
+    public async Task<ActionResult<bool>> CheckOverlap([FromQuery] int ng, [FromQuery] int vg, [FromQuery] int? prkey) =>
+        Ok(await repository.HasOverlapAsync(ng, vg, prkey));
+
     [HttpGet("{prkey:int}")]
     public async Task<ActionResult<Sp122>> GetById(int prkey)
     {

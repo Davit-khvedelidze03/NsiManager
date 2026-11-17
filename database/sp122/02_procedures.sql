@@ -2,14 +2,9 @@
    SP-122 — stored procedure-ები
    გაშვება შეიძლება რამდენჯერმე (CREATE OR ALTER).
 
-   SP-122-ის წესი (დადასტურებულია რეალურ მონაცემებზე, 3267 ჩანაწერი):
-   ჩანაწერი ვაგონებს ნომრის ციფრების მიხედვით აღწერს, არა უბრალო რიცხვითი შუალედით.
-   ნომერი 8-ნიშნაა: [1-3][4][5][6][7][8]. ვაგონი ეკუთვნის ჩანაწერს, თუ
-     პირველი 3 ციფრი  ∈ [ng-ის, vg-ის პირველი 3 ციფრი]
-     მე-4 ციფრი       ∈ [ng-ის მე-4, vg-ის მე-4]   … და ასე მე-7-მდე
-   მე-8 ციფრი საკონტროლოა და არ მოწმდება.
-   მაგ.: 20000000–20999989 (მე-7 ციფრი 0–8) და 20000090–20999999 (მე-7 ციფრი 9)
-   რიცხვით ერთმანეთს კვეთს, მაგრამ ერთ ვაგონსაც არ იზიარებს.
+   შენახვა ამოწმებს ძველი ფორმის ვალიდაციებს.
+   რიცხვითი ინტერვალების გადაკვეთა გაფრთხილებაა (SP122_CheckOverlap), არა აკრძალვა.
+   GetList-ის ნომრით ძებნა ინარჩუნებს ციფრების მიხედვით ძებნას.
 
    შეცდომების ერთიანი წესი (API მათ HTTP კოდად გადათარგმნის):
      50001 → 400  არასწორი მონაცემი
@@ -108,39 +103,60 @@ BEGIN
         THROW 50001, N'ვაგონის ნომერი უნდა იყოს 8-ნიშნა', 1;
     END
 
-    IF @ng > @vg
+    IF @ng >= @vg
     BEGIN
-        THROW 50001, N'ქვედა ზღვარი არ შეიძლება აღემატებოდეს ზედა ზღვარს', 1;
+        THROW 50001, N'ზედა ზღვარი უნდა აღემატებოდეს ქვედას', 1;
     END
 
-    -- თითოეული ციფრი ქვედა ზღვარში არ უნდა აღემატებოდეს ზედა ზღვრის შესაბამის ციფრს
-    IF @ng / 10000 % 10 > @vg / 10000 % 10
-       OR @ng / 1000 % 10 > @vg / 1000 % 10
-       OR @ng / 100 % 10  > @vg / 100 % 10
-       OR @ng / 10 % 10   > @vg / 10 % 10
-    BEGIN
-        THROW 50001, N'ქვედა ზღვრის თითოეული ციფრი (მე-4–მე-7) არ უნდა აღემატებოდეს ზედა ზღვრის შესაბამის ციფრს', 1;
-    END
+    IF @ng % 10 <> 0 OR @vg % 10 <> 9
+        THROW 50001, N'ქვედა ზღვარი უნდა მთავრდებოდეს 0-ით, ზედა — 9-ით', 1;
+END
+GO
 
-    -- გადაფარვა: არსებობს თუ არა ჩანაწერი, რომელიც ერთ ვაგონს მაინც იზიარებს
-    DECLARE @msg NVARCHAR(400);
+-- რიცხვითი ინტერვალები, საზღვრების ჩათვლით; საკუთარი ჩანაწერი გამოირიცხება.
+CREATE OR ALTER PROCEDURE dbo.SP122_CheckOverlap
+    @ng INT,
+    @vg INT,
+    @prkey INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT CAST(CASE WHEN EXISTS (
+        SELECT 1 FROM dbo.[SP-122]
+        WHERE (@prkey IS NULL OR prkey <> @prkey)
+          AND ng <= @vg AND vg >= @ng
+    ) THEN 1 ELSE 0 END AS BIT);
+END
+GO
 
-    SELECT TOP (1)
-           @msg = CONCAT(N'დიაპაზონი ფარავს იმავე ვაგონებს, რასაც არსებული ჩანაწერი: ', ng, N' – ', vg)
-    FROM   dbo.[SP-122] WITH (UPDLOCK, HOLDLOCK)
-    WHERE  (@prkey IS NULL OR prkey <> @prkey)
-      AND  ng <= @vg AND vg >= @ng                     -- სწრაფი წინასწარი ფილტრი
-      AND  ng / 100000      <= @vg / 100000      AND @ng / 100000      <= vg / 100000
-      AND  ng / 10000 % 10  <= @vg / 10000 % 10  AND @ng / 10000 % 10  <= vg / 10000 % 10
-      AND  ng / 1000 % 10   <= @vg / 1000 % 10   AND @ng / 1000 % 10   <= vg / 1000 % 10
-      AND  ng / 100 % 10    <= @vg / 100 % 10    AND @ng / 100 % 10    <= vg / 100 % 10
-      AND  ng / 10 % 10     <= @vg / 10 % 10     AND @ng / 10 % 10     <= vg / 10 % 10
-    ORDER BY ng;
+CREATE OR ALTER PROCEDURE dbo.SP122_ValidateValues
+    @ng INT,
+    @kol NVARCHAR(10),
+    @ves DECIMAL(10,2),
+    @udl NVARCHAR(10),
+    @dm NVARCHAR(10),
+    @rod NVARCHAR(10),
+    @utv NVARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @ves IS NULL OR @ves = 0
+        THROW 50001, N'შეიყვანეთ ნულისგან განსხვავებული წონა', 1;
 
-    IF @msg IS NOT NULL
-    BEGIN
-        THROW 50002, @msg, 1;
-    END
+    -- ტექსტურ სვეტებშიც მხოლოდ არანულოვანი რიცხვები მიიღება; დადებითობა არ მოითხოვება.
+    IF EXISTS (
+        SELECT 1 FROM (VALUES (@kol), (@udl), (@dm), (@rod), (@utv)) AS fields(value)
+        WHERE value IS NULL OR value = N''
+           OR value LIKE N'%[^0-9.,-]%' COLLATE Latin1_General_100_BIN2
+           OR TRY_CONVERT(DECIMAL(28,10), REPLACE(value, N',', N'.')) IS NULL
+           OR TRY_CONVERT(DECIMAL(28,10), REPLACE(value, N',', N'.')) = 0
+    )
+        THROW 50001, N'რაოდენობა, წონა, სიგრძეები, სახეობა და ტიპი უნდა იყოს არანულოვანი რიცხვები', 1;
+
+    DECLARE @length INT = CASE WHEN @ng BETWEEN 39000000 AND 39999999 OR @ng BETWEEN 50000000 AND 59999999 THEN 4 ELSE 3 END;
+    DECLARE @code DECIMAL(28,10) = TRY_CONVERT(DECIMAL(28,10), REPLACE(@utv, N',', N'.'));
+    IF LEN(CONVERT(VARCHAR(40), CONVERT(DECIMAL(28,0), ROUND(@code, 0)))) <> @length
+        THROW 50001, N'ტიპის კოდის სიგრძე არ შეესაბამება ვაგონის ნომერს', 1;
 END
 GO
 
@@ -160,8 +176,8 @@ CREATE OR ALTER PROCEDURE dbo.SP122_Insert
     @spec    DECIMAL(10,0) = NULL,
     @negab   DECIMAL(10,0) = NULL,
     @n_slujb DECIMAL(10,0) = NULL,
-    @naz_gr  NVARCHAR(500) = NULL,
-    @naz_rus NVARCHAR(500) = NULL
+    @naz_gr  NVARCHAR(MAX) = NULL,
+    @naz_rus NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -172,6 +188,7 @@ BEGIN
     BEGIN TRANSACTION;
 
         EXEC dbo.SP122_ValidateRange @prkey = NULL, @ng = @ng, @vg = @vg;
+        EXEC dbo.SP122_ValidateValues @ng, @kol, @ves, @udl, @dm, @rod, @utv;
 
         INSERT INTO dbo.[SP-122]
                (ng, vg, kol, ves, udl, dm, prg, utv, rod, spec, negab, n_slujb, naz_gr, naz_rus)
@@ -184,8 +201,8 @@ BEGIN
                 NULLIF(LTRIM(RTRIM(@utv)), N''),
                 NULLIF(LTRIM(RTRIM(@rod)), N''),
                 @spec, @negab, @n_slujb,
-                NULLIF(LTRIM(RTRIM(@naz_gr)),  N''),
-                NULLIF(LTRIM(RTRIM(@naz_rus)), N''));
+                NULLIF(LTRIM(RTRIM(LEFT(LTRIM(RTRIM(@naz_gr)) COLLATE Latin1_General_100_CI_AS_SC, 70))), N''),
+                NULLIF(LTRIM(RTRIM(LEFT(LTRIM(RTRIM(@naz_rus)) COLLATE Latin1_General_100_CI_AS_SC, 70))), N''));
 
         SET @prkey = SCOPE_IDENTITY();
 
@@ -212,8 +229,8 @@ CREATE OR ALTER PROCEDURE dbo.SP122_Update
     @spec    DECIMAL(10,0) = NULL,
     @negab   DECIMAL(10,0) = NULL,
     @n_slujb DECIMAL(10,0) = NULL,
-    @naz_gr  NVARCHAR(500) = NULL,
-    @naz_rus NVARCHAR(500) = NULL
+    @naz_gr  NVARCHAR(MAX) = NULL,
+    @naz_rus NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -227,6 +244,7 @@ BEGIN
         END
 
         EXEC dbo.SP122_ValidateRange @prkey = @prkey, @ng = @ng, @vg = @vg;
+        EXEC dbo.SP122_ValidateValues @ng, @kol, @ves, @udl, @dm, @rod, @utv;
 
         UPDATE dbo.[SP-122]
         SET    ng      = @ng,
@@ -241,8 +259,8 @@ BEGIN
                spec    = @spec,
                negab   = @negab,
                n_slujb = @n_slujb,
-               naz_gr  = NULLIF(LTRIM(RTRIM(@naz_gr)),  N''),
-               naz_rus = NULLIF(LTRIM(RTRIM(@naz_rus)), N'')
+               naz_gr  = NULLIF(LTRIM(RTRIM(LEFT(LTRIM(RTRIM(@naz_gr)) COLLATE Latin1_General_100_CI_AS_SC, 70))), N''),
+               naz_rus = NULLIF(LTRIM(RTRIM(LEFT(LTRIM(RTRIM(@naz_rus)) COLLATE Latin1_General_100_CI_AS_SC, 70))), N'')
         WHERE  prkey = @prkey;
 
     COMMIT TRANSACTION;

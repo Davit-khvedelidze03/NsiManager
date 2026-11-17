@@ -19,6 +19,12 @@ export class Sp122ApiService {
     return this.http.get<PagedResult<Sp122>>(this.url, { params });
   }
 
+  checkOverlap(ng: number, vg: number, prkey?: number): Observable<boolean> {
+    let params = new HttpParams().set('ng', ng).set('vg', vg);
+    if (prkey !== undefined) params = params.set('prkey', prkey);
+    return this.http.get<boolean>(`${this.url}/overlap`, { params });
+  }
+
   insert(request: Sp122Request): Observable<Sp122> {
     return this.http.post<Sp122>(this.url, request);
   }
